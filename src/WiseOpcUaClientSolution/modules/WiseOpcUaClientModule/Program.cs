@@ -20,7 +20,6 @@ namespace WiseOpcUaClientModule
         //static int counter;
 
         private const string DefaultAddress = "opc.tcp:localhost:4849";
-
         private const string DefaultNodePotentio1 = "ns=2;s=Machine/Line";
         private const string DefaultNodePotentio2 = "ns=2;s=Machine/Line";
         private const string DefaultNodeSwitch1 = "ns=2;s=Machine/Line";
@@ -31,6 +30,8 @@ namespace WiseOpcUaClientModule
         private const string DefaultLicenseKey = "";
 
         private static ModuleClient ioTHubModuleClient;
+
+        private static OpcClient opcClient;
 
         static void Main(string[] args)
         {
@@ -90,12 +91,16 @@ namespace WiseOpcUaClientModule
                 {
                     Opc.UaFx.Licenser.LicenseKey = LicenseKey;
                 }
+                else
+                {
+                    Console.WriteLine("No license key available.");
 
-                var address = Address;
+                    Opc.UaFx.Licenser.LicenseKey=string.Empty;
+                }
 
-                var client = new OpcClient(address);
+                opcClient = new OpcClient(Address);
 
-                client.Connect();
+                opcClient.Connect();
 
                 OpcSubscribeDataChange[] commands = new OpcSubscribeDataChange[] {
                     new OpcSubscribeDataChange(NodePotentio1, OpcDataChangeTrigger.StatusValueTimestamp, HandleDataChangedMachineLineNode),
@@ -106,8 +111,8 @@ namespace WiseOpcUaClientModule
                     new OpcSubscribeDataChange(NodeLed2, OpcDataChangeTrigger.StatusValueTimestamp, HandleDataChangedMachineLineNode),
                 };
 
-                OpcSubscription subscription = client.SubscribeNodes(commands);
-                Console.WriteLine($"Client started... (listing to {address})");
+                OpcSubscription subscription = opcClient.SubscribeNodes(commands);
+                Console.WriteLine($"Client started... (listing to {Address})");
             }
             catch (System.Exception ex)
             {

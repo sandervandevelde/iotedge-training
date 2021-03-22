@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectCapability Include="AzureIoTEdgeModule"/>
+    <ProjectCapability Include="AzureIoTEdgeModule" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,4 +24,5 @@
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
     <PackageReference Include="Opc.UaFx.Client" Version="2.11.5" />
   </ItemGroup>
+
 </Project>
