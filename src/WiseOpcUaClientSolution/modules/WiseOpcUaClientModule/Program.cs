@@ -1,6 +1,6 @@
 namespace WiseOpcUaClientModule
 {
-  using System;
+    using System;
     using System.IO;
     using System.Runtime.InteropServices;
     using System.Runtime.Loader;
@@ -15,7 +15,7 @@ namespace WiseOpcUaClientModule
     using Opc.UaFx;
     using Opc.UaFx.Client;
 
-    class Program
+    internal class Program
     {
         //static int counter;
 
@@ -33,7 +33,7 @@ namespace WiseOpcUaClientModule
 
         private static OpcClient opcClient;
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             Init().Wait();
 
@@ -58,14 +58,14 @@ namespace WiseOpcUaClientModule
         /// Initializes the ModuleClient and sets up the callback to receive
         /// messages containing temperature information
         /// </summary>
-        static async Task Init()
+        private static async Task Init()
         {
             MqttTransportSettings mqttSetting = new MqttTransportSettings(TransportType.Mqtt_Tcp_Only);
             ITransportSettings[] settings = { mqttSetting };
 
             // Open a connection to the Edge runtime
             ioTHubModuleClient = await ModuleClient.CreateFromEnvironmentAsync(settings);
-       
+
             // Attach callback for Twin desired properties updates
             await ioTHubModuleClient.SetDesiredPropertyUpdateCallbackAsync(onDesiredPropertiesUpdate, ioTHubModuleClient);
 
@@ -82,7 +82,6 @@ namespace WiseOpcUaClientModule
             thread.Start();
         }
 
-        
         private static void ThreadBody()
         {
             try
@@ -95,7 +94,7 @@ namespace WiseOpcUaClientModule
                 {
                     Console.WriteLine("No license key available.");
 
-                    Opc.UaFx.Licenser.LicenseKey=string.Empty;
+                    Opc.UaFx.Licenser.LicenseKey = string.Empty;
                 }
 
                 opcClient = new OpcClient(Address);
@@ -148,10 +147,9 @@ namespace WiseOpcUaClientModule
             //     message.Properties.Add("ContentEncodingX", "PhilipsOpcUa+utf-8+applicaiton/json");
 
             //     ioTHubModuleClient.SendEventAsync("output1", message).Wait();
-            
+
             //     Console.WriteLine("Json message sent");
             // }
-            
         }
 
         private static string Address { get; set; } = DefaultAddress;
@@ -186,7 +184,7 @@ namespace WiseOpcUaClientModule
 
                 var reportedProperties = new TwinCollection();
 
-                if (desiredProperties.Contains("address")) 
+                if (desiredProperties.Contains("address"))
                 {
                     if (desiredProperties["address"] != null)
                     {
@@ -202,7 +200,7 @@ namespace WiseOpcUaClientModule
                     reportedProperties["address"] = Address;
                 }
 
-                if (desiredProperties.Contains("nodePotentio1")) 
+                if (desiredProperties.Contains("nodePotentio1"))
                 {
                     if (desiredProperties["nodePotentio1"] != null)
                     {
@@ -218,7 +216,7 @@ namespace WiseOpcUaClientModule
                     reportedProperties["nodePotentio1"] = NodePotentio1;
                 }
 
-                if (desiredProperties.Contains("nodePotentio2")) 
+                if (desiredProperties.Contains("nodePotentio2"))
                 {
                     if (desiredProperties["nodePotentio2"] != null)
                     {
@@ -234,7 +232,7 @@ namespace WiseOpcUaClientModule
                     reportedProperties["nodePotentio2"] = NodePotentio2;
                 }
 
-                if (desiredProperties.Contains("nodeSwitch1")) 
+                if (desiredProperties.Contains("nodeSwitch1"))
                 {
                     if (desiredProperties["nodeSwitch1"] != null)
                     {
@@ -250,7 +248,7 @@ namespace WiseOpcUaClientModule
                     reportedProperties["nodeSwitch1"] = NodeSwitch1;
                 }
 
-                if (desiredProperties.Contains("nodeSwitch2")) 
+                if (desiredProperties.Contains("nodeSwitch2"))
                 {
                     if (desiredProperties["nodeSwitch2"] != null)
                     {
@@ -266,7 +264,7 @@ namespace WiseOpcUaClientModule
                     reportedProperties["nodeSwitch2"] = NodeSwitch2;
                 }
 
-                if (desiredProperties.Contains("nodeLed1")) 
+                if (desiredProperties.Contains("nodeLed1"))
                 {
                     if (desiredProperties["nodeLed1"] != null)
                     {
@@ -282,7 +280,7 @@ namespace WiseOpcUaClientModule
                     reportedProperties["nodeLed1"] = NodeLed1;
                 }
 
-                if (desiredProperties.Contains("nodeLed2")) 
+                if (desiredProperties.Contains("nodeLed2"))
                 {
                     if (desiredProperties["nodeLed2"] != null)
                     {
@@ -298,7 +296,7 @@ namespace WiseOpcUaClientModule
                     reportedProperties["nodeLed2"] = NodeLed2;
                 }
 
-                if (desiredProperties.Contains("licenseKey")) 
+                if (desiredProperties.Contains("licenseKey"))
                 {
                     if (desiredProperties["licenseKey"] != null)
                     {
@@ -317,6 +315,8 @@ namespace WiseOpcUaClientModule
                 if (reportedProperties.Count > 0)
                 {
                     client.UpdateReportedPropertiesAsync(reportedProperties).ConfigureAwait(false);
+
+                    Console.WriteLine("Please restart module to activate changes.");
                 }
             }
             catch (AggregateException ex)
