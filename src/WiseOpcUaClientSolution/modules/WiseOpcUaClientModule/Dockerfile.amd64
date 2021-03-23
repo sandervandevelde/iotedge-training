@@ -12,6 +12,11 @@ WORKDIR /app
 COPY --from=build-env /app/out ./
 
 RUN useradd -ms /bin/bash moduleuser
+
+RUN chown -R moduleuser:moduleuser /app      
+ 
+RUN chmod 755 /app                             
+
 USER moduleuser
 
 ENTRYPOINT ["dotnet", "WiseOpcUaClientModule.dll"]

@@ -98,7 +98,8 @@ namespace WiseOpcUaClientModule
                 }
 
                 opcClient = new OpcClient(Address);
-
+                opcClient.Connecting += OpcClient_Connecting;
+                opcClient.Connected += OpcClient_Connected;
                 opcClient.Connect();
 
                 OpcSubscribeDataChange[] commands = new OpcSubscribeDataChange[] {
@@ -112,24 +113,35 @@ namespace WiseOpcUaClientModule
 
                 OpcSubscription subscription = opcClient.SubscribeNodes(commands);
                 Console.WriteLine($"Client started... (listing to {Address})");
+
+                while(true)
+                {
+                    // keep thread alive
+                    Thread.Sleep(1000);
+                }
             }
             catch (System.Exception ex)
             {
                 Console.WriteLine($"Exception: {ex.Message}");
+                Console.WriteLine("Halted...");      
             }
+        }
+
+        private static void OpcClient_Connected(object sender, EventArgs e)
+        {
+            Console.WriteLine("CONNECTED");
+        }
+
+        private static void OpcClient_Connecting(object sender, EventArgs e)
+        {
+            Console.WriteLine("CONNECTING");
         }
 
         private static void HandleDataChangedMachineLineNode(object sender, OpcDataChangeReceivedEventArgs e)
         {
-            var value = (e.Item.Value.Value as string[]);
+            var value = Convert.ToDouble(e.Item.Value.Value);
 
-            if (value.Length == 0)
-            {
-                Console.WriteLine("Ignore empty array");
-                return;
-            }
-
-            Console.WriteLine($"Line ----> \n\t ServerTimeStamp: {e.Item.Value.ServerTimestamp}\n\t SourceTimestamp: {e.Item.Value.SourceTimestamp} \n\t Value: {value}");
+            Console.WriteLine($"Line ----> \n\t ServerTimeStamp: {e.Item.Value.ServerTimestamp}\n\t SourceTimestamp: {e.Item.Value.SourceTimestamp} \n\t {(sender as OpcMonitoredItem).NodeId.Value} Value: {value}");
 
             // TODO SEND MESSAGE to CLOUD
 
