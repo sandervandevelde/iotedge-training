@@ -33,6 +33,10 @@ namespace WiseOpcUaClientModule
 
         private static OpcClient opcClient;
 
+        private static string _moduleId; 
+
+        private static string _deviceId;
+
         private static void Main(string[] args)
         {
             Init().Wait();
@@ -60,26 +64,86 @@ namespace WiseOpcUaClientModule
         /// </summary>
         private static async Task Init()
         {
+            _deviceId = System.Environment.GetEnvironmentVariable("IOTEDGE_DEVICEID");
+            _moduleId = Environment.GetEnvironmentVariable("IOTEDGE_MODULEID");
+
+            Console.WriteLine();
+            Console.WriteLine("");
+            Console.WriteLine("  _       _                  _                            _                                                    ");
+            Console.WriteLine(" (_)     | |                | |                          (_)                                                   ");
+            Console.WriteLine("  _  ___ | |_ ______ ___  __| | __ _  ___ ________      ___ ___  ___ ______ ___  _ __   ___ ______ _   _  __ _ ");
+            Console.WriteLine(" | |/ _ \\| __|______/ _ \\/ _` |/ _` |/ _ \\______\\ \\ /\\ / / / __|/ _ \\______/ _ \\| '_ \\ / __|______| | | |/ _` |");
+            Console.WriteLine(" | | (_) | |_      |  __/ (_| | (_| |  __/       \\ V  V /| \\__ \\  __/     | (_) | |_) | (__       | |_| | (_| |");
+            Console.WriteLine(" |_|\\___/ \\__|      \\___|\\__,_|\\__, |\\___|        \\_/\\_/ |_|___/\\___|      \\___/| .__/ \\___|       \\__,_|\\__,_|");
+            Console.WriteLine("                                __/ |                                           | |                            ");
+            Console.WriteLine("                               |___/                                            |_|                            ");
+            Console.WriteLine("");
+
             MqttTransportSettings mqttSetting = new MqttTransportSettings(TransportType.Mqtt_Tcp_Only);
             ITransportSettings[] settings = { mqttSetting };
 
             // Open a connection to the Edge runtime
             ioTHubModuleClient = await ModuleClient.CreateFromEnvironmentAsync(settings);
 
-            // Attach callback for Twin desired properties updates
-            await ioTHubModuleClient.SetDesiredPropertyUpdateCallbackAsync(onDesiredPropertiesUpdate, ioTHubModuleClient);
-
             // Execute callback method for Twin desired properties updates
             var twin = await ioTHubModuleClient.GetTwinAsync();
             await onDesiredPropertiesUpdate(twin.Properties.Desired, ioTHubModuleClient);
 
-            await ioTHubModuleClient.OpenAsync();
-            Console.WriteLine("IoT Hub module client initialized.");
+            // Attach callback for Twin desired properties updates
+            await ioTHubModuleClient.SetDesiredPropertyUpdateCallbackAsync(onDesiredPropertiesUpdate, ioTHubModuleClient);
 
-            // TODO DirectMethod for command
+            Console.WriteLine("Attached routing output: output1."); 
+
+            await ioTHubModuleClient.SetMethodHandlerAsync(
+                "lights",
+                lightsMethodCallBack,
+                ioTHubModuleClient);
+
+            Console.WriteLine("Attached method handler: lights");   
+
+            await ioTHubModuleClient.OpenAsync();
+
+            Console.WriteLine($"Module '{_deviceId}'-'{_moduleId}' initialized.");
 
             var thread = new Thread(() => ThreadBody());
             thread.Start();
+        }
+
+        public class LightsResponse
+        {
+            public string state1 { get; set; }
+            public string state2 { get; set; }
+            public string errorMessage { get; set; }
+        }
+
+        static async Task<MethodResponse> lightsMethodCallBack(MethodRequest methodRequest, object userContext)        
+        {
+           var lightsResponse = new LightsResponse();
+
+            try
+            {
+                 dynamic request = JsonConvert.DeserializeObject(methodRequest.DataAsJson);
+
+                uint relay1 = (uint) request.relay1;
+                uint relay2 = (uint) request.relay2;
+
+                OpcStatus result1 = opcClient.WriteNode("ns=2;s=Wise4012E:Relay01", relay1);  // typemismatch was a bitch
+                OpcStatus result2 = opcClient.WriteNode("ns=2;s=Wise4012E:Relay02", relay2);
+
+                lightsResponse.state1 = result1.Description;                   
+                lightsResponse.state2 = result2.Description;                   
+            }
+            catch (Exception ex)
+            {
+               lightsResponse.errorMessage = ex.Message;   
+            }            
+
+            var json = JsonConvert.SerializeObject(lightsResponse);
+            var response = new MethodResponse(Encoding.UTF8.GetBytes(json), 200);
+
+            await Task.Delay(TimeSpan.FromSeconds(0));
+
+            return response;
         }
 
         private static void ThreadBody()
@@ -127,6 +191,8 @@ namespace WiseOpcUaClientModule
             }
         }
 
+
+
         private static void OpcClient_Connected(object sender, EventArgs e)
         {
             Console.WriteLine("CONNECTED");
@@ -141,7 +207,7 @@ namespace WiseOpcUaClientModule
         {
             var value = Convert.ToInt32(e.Item.Value.Value);
 
-            Console.WriteLine($"Line ----> \n\t ServerTimeStamp: {e.Item.Value.ServerTimestamp}\n\t SourceTimestamp: {e.Item.Value.SourceTimestamp} \n\t {(sender as OpcMonitoredItem).NodeId.Value} Value: {value}");
+            Console.WriteLine($"ServerTimeStamp: {e.Item.Value.ServerTimestamp}\n\t {(sender as OpcMonitoredItem).NodeId.Value} Value: {value}");
 
             // SEND MESSAGE to CLOUD
 
@@ -169,14 +235,12 @@ namespace WiseOpcUaClientModule
         }
 
         private static string Address { get; set; } = DefaultAddress;
-
         private static string NodePotentio1 { get; set; } = DefaultNodePotentio1;
         private static string NodePotentio2 { get; set; } = DefaultNodePotentio2;
         private static string NodeSwitch1 { get; set; } = DefaultNodeSwitch1;
         private static string NodeSwitch2 { get; set; } = DefaultNodeSwitch2;
         private static string NodeRelay1 { get; set; } = DefaultNodeRelay1;
         private static string NodeRelay2 { get; set; } = DefaultNodeRelay2;
-
         private static string LicenseKey { get; set; } = DefaultLicenseKey;
 
         private static Task onDesiredPropertiesUpdate(TwinCollection desiredProperties, object userContext)
