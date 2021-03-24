@@ -122,7 +122,8 @@ namespace WiseOpcUaClientModule
 
             try
             {
-                 dynamic request = JsonConvert.DeserializeObject(methodRequest.DataAsJson);
+                System.Console.WriteLine($"Lights method: {methodRequest.DataAsJson}");
+                dynamic request = JsonConvert.DeserializeObject(methodRequest.DataAsJson);
 
                 uint relay1 = (uint) request.relay1;
                 uint relay2 = (uint) request.relay2;
@@ -131,7 +132,9 @@ namespace WiseOpcUaClientModule
                 OpcStatus result2 = opcClient.WriteNode("ns=2;s=Wise4012E:Relay02", relay2);
 
                 lightsResponse.state1 = result1.Description;                   
-                lightsResponse.state2 = result2.Description;                   
+                lightsResponse.state2 = result2.Description;     
+
+                Console.WriteLine($"Response 1: '{result1.Description}'; Response 1: '{result2.Description}'");              
             }
             catch (Exception ex)
             {
@@ -164,6 +167,12 @@ namespace WiseOpcUaClientModule
                 opcClient = new OpcClient(Address);
                 opcClient.Connecting += OpcClient_Connecting;
                 opcClient.Connected += OpcClient_Connected;
+                opcClient.BreakDetected += OpcClient_BreakDetected;
+                opcClient.Disconnected += OpcClient_Disconnected;
+                opcClient.Disconnecting += OpcClient_Disconnecting;
+                opcClient.Reconnected += OpcClient_Reconnected;
+                opcClient.Reconnecting += OpcClient_Reconnecting;
+
                 opcClient.Connect();
 
                 OpcSubscribeDataChange[] commands = new OpcSubscribeDataChange[] {
@@ -203,11 +212,37 @@ namespace WiseOpcUaClientModule
             Console.WriteLine("CONNECTING");
         }
 
+        private static void OpcClient_Reconnecting(object sender, EventArgs e)
+        {
+            Console.WriteLine("RECONNECTING");
+        }
+
+        private static void OpcClient_Reconnected(object sender, EventArgs e)
+        {
+            Console.WriteLine("RECONNECTED");
+        }
+
+        private static void OpcClient_Disconnecting(object sender, EventArgs e)
+        {
+            Console.WriteLine("DISCONNECTING");
+        }
+
+        private static void OpcClient_Disconnected(object sender, EventArgs e)
+        {
+            Console.WriteLine("DISCONNECTED");
+        }
+
+        private static void OpcClient_BreakDetected(object sender, EventArgs e)
+        {
+
+            Console.WriteLine("BREAK DETECTED");
+        }
+
         private static void HandleDataChangedMachineLineNode(object sender, OpcDataChangeReceivedEventArgs e)
         {
             var value = Convert.ToInt32(e.Item.Value.Value);
 
-            Console.WriteLine($"ServerTimeStamp: {e.Item.Value.ServerTimestamp}\n\t {(sender as OpcMonitoredItem).NodeId.Value} Value: {value}");
+            Console.WriteLine($"ServerTimeStamp: {e.Item.Value.ServerTimestamp}\t {(sender as OpcMonitoredItem).NodeId.Value} Value: {value}");
 
             // SEND MESSAGE to CLOUD
 
