@@ -109,13 +109,6 @@ namespace WiseOpcUaClientModule
             thread.Start();
         }
 
-        public class LightsResponse
-        {
-            public string state1 { get; set; }
-            public string state2 { get; set; }
-            public string errorMessage { get; set; }
-        }
-
         static async Task<MethodResponse> lightsMethodCallBack(MethodRequest methodRequest, object userContext)        
         {
            var lightsResponse = new LightsResponse();
@@ -450,16 +443,5 @@ namespace WiseOpcUaClientModule
 
             return Task.CompletedTask;
         }
-    }
-
-    public class WiseMessage
-    {
-        public string deviceId { get; set; }
-
-        public string node { get; set; }
-
-        public int value { get; set; }
-
-        public DateTime timeStamp { get; set; }
     }
 }
