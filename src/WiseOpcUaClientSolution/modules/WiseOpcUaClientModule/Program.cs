@@ -24,8 +24,8 @@ namespace WiseOpcUaClientModule
         private const string DefaultNodePotentio2 = "ns=2;s=Machine/Line";
         private const string DefaultNodeSwitch1 = "ns=2;s=Machine/Line";
         private const string DefaultNodeSwitch2 = "ns=2;s=Machine/Line";
-        private const string DefaultNodeLed1 = "ns=2;s=Machine/Line";
-        private const string DefaultNodeLed2 = "ns=2;s=Machine/Line";
+        private const string DefaultNodeRelay1 = "ns=2;s=Machine/Line";
+        private const string DefaultNodeRelay2 = "ns=2;s=Machine/Line";
 
         private const string DefaultLicenseKey = "";
 
@@ -103,12 +103,12 @@ namespace WiseOpcUaClientModule
                 opcClient.Connect();
 
                 OpcSubscribeDataChange[] commands = new OpcSubscribeDataChange[] {
-                    new OpcSubscribeDataChange(NodePotentio1, OpcDataChangeTrigger.StatusValueTimestamp, HandleDataChangedMachineLineNode),
-                    new OpcSubscribeDataChange(NodePotentio2, OpcDataChangeTrigger.StatusValueTimestamp, HandleDataChangedMachineLineNode),
-                    new OpcSubscribeDataChange(NodeSwitch1, OpcDataChangeTrigger.StatusValueTimestamp, HandleDataChangedMachineLineNode),
-                    new OpcSubscribeDataChange(NodeSwitch2, OpcDataChangeTrigger.StatusValueTimestamp, HandleDataChangedMachineLineNode),
-                    new OpcSubscribeDataChange(NodeLed1, OpcDataChangeTrigger.StatusValueTimestamp, HandleDataChangedMachineLineNode),
-                    new OpcSubscribeDataChange(NodeLed2, OpcDataChangeTrigger.StatusValueTimestamp, HandleDataChangedMachineLineNode),
+                    new OpcSubscribeDataChange(NodePotentio1, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode),
+                    new OpcSubscribeDataChange(NodePotentio2, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode),
+                    new OpcSubscribeDataChange(NodeSwitch1, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode),
+                    new OpcSubscribeDataChange(NodeSwitch2, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode),
+                    new OpcSubscribeDataChange(NodeRelay1, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode),
+                    new OpcSubscribeDataChange(NodeRelay2, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode),
                 };
 
                 OpcSubscription subscription = opcClient.SubscribeNodes(commands);
@@ -139,29 +139,33 @@ namespace WiseOpcUaClientModule
 
         private static void HandleDataChangedMachineLineNode(object sender, OpcDataChangeReceivedEventArgs e)
         {
-            var value = Convert.ToDouble(e.Item.Value.Value);
+            var value = Convert.ToInt32(e.Item.Value.Value);
 
             Console.WriteLine($"Line ----> \n\t ServerTimeStamp: {e.Item.Value.ServerTimestamp}\n\t SourceTimestamp: {e.Item.Value.SourceTimestamp} \n\t {(sender as OpcMonitoredItem).NodeId.Value} Value: {value}");
 
-            // TODO SEND MESSAGE to CLOUD
+            // SEND MESSAGE to CLOUD
 
-            // var s = StrategyFactory.GetStrategy(value[0], value[1]);
+            var wiseMessage =  new WiseMessage
+            {
+                deviceId = Address,
+                timeStamp = DateTime.Now,
+                node = (sender as OpcMonitoredItem).NodeId.Value.ToString(),
+                value = value,
+            };
 
-            // var jsonMessage = s.ParseArray(value);
+            var jsonMessage = JsonConvert.SerializeObject(wiseMessage);
 
-            // Console.WriteLine($"Line ----> \n\t ServerTimeStamp: {e.Item.Value.ServerTimestamp}\n\t SourceTimestamp: {e.Item.Value.SourceTimestamp} \n\t Value: {jsonMessage}");
+            using (var message = new Message(Encoding.UTF8.GetBytes(jsonMessage)))
+            {
+                message.ContentEncoding = "utf-8";
+                message.ContentType = "application/json";
 
-            // using (var message = new Message(Encoding.UTF8.GetBytes(jsonMessage)))
-            // {
-            //     message.ContentEncoding = "utf-8";
-            //     message.ContentType = "application/json";
+                message.Properties.Add("ContentEncodingX", "PhilipsOpcUa+utf-8+applicaiton/json");
 
-            //     message.Properties.Add("ContentEncodingX", "PhilipsOpcUa+utf-8+applicaiton/json");
+                ioTHubModuleClient.SendEventAsync("output1", message).Wait();
 
-            //     ioTHubModuleClient.SendEventAsync("output1", message).Wait();
-
-            //     Console.WriteLine("Json message sent");
-            // }
+                Console.WriteLine("Json message sent");
+            }
         }
 
         private static string Address { get; set; } = DefaultAddress;
@@ -170,8 +174,8 @@ namespace WiseOpcUaClientModule
         private static string NodePotentio2 { get; set; } = DefaultNodePotentio2;
         private static string NodeSwitch1 { get; set; } = DefaultNodeSwitch1;
         private static string NodeSwitch2 { get; set; } = DefaultNodeSwitch2;
-        private static string NodeLed1 { get; set; } = DefaultNodeLed1;
-        private static string NodeLed2 { get; set; } = DefaultNodeLed2;
+        private static string NodeRelay1 { get; set; } = DefaultNodeRelay1;
+        private static string NodeRelay2 { get; set; } = DefaultNodeRelay2;
 
         private static string LicenseKey { get; set; } = DefaultLicenseKey;
 
@@ -276,36 +280,36 @@ namespace WiseOpcUaClientModule
                     reportedProperties["nodeSwitch2"] = NodeSwitch2;
                 }
 
-                if (desiredProperties.Contains("nodeLed1"))
+                if (desiredProperties.Contains("nodeRelay1"))
                 {
-                    if (desiredProperties["nodeLed1"] != null)
+                    if (desiredProperties["nodeRelay1"] != null)
                     {
-                        NodeLed1 = desiredProperties["nodeLed1"];
+                        NodeRelay1 = desiredProperties["nodeRelay1"];
                     }
                     else
                     {
-                        NodeLed1 = DefaultNodeLed1;
+                        NodeRelay1 = DefaultNodeRelay1;
                     }
 
-                    Console.WriteLine($"NodeLed1 changed to {NodeLed1}");
+                    Console.WriteLine($"NodeRelay1 changed to {NodeRelay1}");
 
-                    reportedProperties["nodeLed1"] = NodeLed1;
+                    reportedProperties["nodeRelay1"] = NodeRelay1;
                 }
 
-                if (desiredProperties.Contains("nodeLed2"))
+                if (desiredProperties.Contains("nodeRelay2"))
                 {
-                    if (desiredProperties["nodeLed2"] != null)
+                    if (desiredProperties["nodeRelay2"] != null)
                     {
-                        NodeLed2 = desiredProperties["nodeLed2"];
+                        NodeRelay2 = desiredProperties["nodeRelay2"];
                     }
                     else
                     {
-                        NodeLed2 = DefaultNodeLed2;
+                        NodeRelay2 = DefaultNodeRelay2;
                     }
 
-                    Console.WriteLine($"NodeLed2 changed to {NodeLed2}");
+                    Console.WriteLine($"NodeRelay2 changed to {NodeRelay2}");
 
-                    reportedProperties["nodeLed2"] = NodeLed2;
+                    reportedProperties["nodeRelay2"] = NodeRelay2;
                 }
 
                 if (desiredProperties.Contains("licenseKey"))
@@ -347,5 +351,16 @@ namespace WiseOpcUaClientModule
 
             return Task.CompletedTask;
         }
+    }
+
+    public class WiseMessage
+    {
+        public string deviceId { get; set; }
+
+        public string node { get; set; }
+
+        public int value { get; set; }
+
+        public DateTime timeStamp { get; set; }
     }
 }
