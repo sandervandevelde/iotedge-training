@@ -193,8 +193,6 @@ namespace WiseOpcUaClientModule
             }
         }
 
-
-
         private static void OpcClient_Connected(object sender, EventArgs e)
         {
             Console.WriteLine("CONNECTED");
@@ -254,7 +252,7 @@ namespace WiseOpcUaClientModule
                 message.ContentEncoding = "utf-8";
                 message.ContentType = "application/json";
 
-                message.Properties.Add("ContentEncodingX", "PhilipsOpcUa+utf-8+applicaiton/json");
+                message.Properties.Add("ContentEncodingX", "OpcUa+utf-8+application/json");
 
                 ioTHubModuleClient.SendEventAsync("output1", message).Wait();
 
