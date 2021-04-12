@@ -17,7 +17,7 @@ namespace WiseOpcUaClientModule
 
     internal class Program
     {
-        //static int counter;
+        private static LogLevelMessage.LogLevel DefaultMinimalLogLevel = LogLevelMessage.LogLevel.Warning;
 
         private const string DefaultAddress = "opc.tcp:localhost:4849";
         private const string DefaultNodePotentio1 = "ns=2;s=Machine/Line";
@@ -88,6 +88,8 @@ namespace WiseOpcUaClientModule
             // Execute callback method for Twin desired properties updates
             var twin = await ioTHubModuleClient.GetTwinAsync();
             await onDesiredPropertiesUpdate(twin.Properties.Desired, ioTHubModuleClient);
+
+            Console.WriteLine("Supported desired properties: address, nodePotentio1, nodePotentio2, nodeSwitch1, nodeSwitch2, nodeRelay1, nodeRelay2, licenseKey, minimalLogLevel."); 
 
             // Attach callback for Twin desired properties updates
             await ioTHubModuleClient.SetDesiredPropertyUpdateCallbackAsync(onDesiredPropertiesUpdate, ioTHubModuleClient);
@@ -188,45 +190,80 @@ namespace WiseOpcUaClientModule
             }
             catch (System.Exception ex)
             {
-                Console.WriteLine($"Exception: {ex.Message}");
-                Console.WriteLine("Halted...");      
+                // TODO: Test for Timeout towards OPC-UA Server connection
+ 
+                Console.WriteLine($"Fatal ThreadBody exception: {ex.Message}");
+
+                var logLevelMessage = new LogLevelMessage { logLevel = LogLevelMessage.LogLevel.Critical, code = "00", message = $"ThreadBody exception: {ex.Message}" };
+
+                SendLogLevelMessage(logLevelMessage).Wait();
+
+                Console.WriteLine("Halted...");    
             }
         }
 
         private static void OpcClient_Connected(object sender, EventArgs e)
         {
             Console.WriteLine("CONNECTED");
+
+            var logLevelMessage = new LogLevelMessage { logLevel = LogLevelMessage.LogLevel.Debug, code = "07", message = "CONNECTED" };
+
+            SendLogLevelMessage(logLevelMessage).Wait();
         }
 
         private static void OpcClient_Connecting(object sender, EventArgs e)
         {
             Console.WriteLine("CONNECTING");
+
+            var logLevelMessage = new LogLevelMessage { logLevel = LogLevelMessage.LogLevel.Debug, code = "06", message = "CONNECTING" };
+
+            SendLogLevelMessage(logLevelMessage).Wait();
         }
 
         private static void OpcClient_Reconnecting(object sender, EventArgs e)
         {
             Console.WriteLine("RECONNECTING");
+
+            var logLevelMessage = new LogLevelMessage { logLevel = LogLevelMessage.LogLevel.Error, code = "05", message = "RECONNECTING" };
+
+            SendLogLevelMessage(logLevelMessage).Wait();
         }
 
         private static void OpcClient_Reconnected(object sender, EventArgs e)
         {
             Console.WriteLine("RECONNECTED");
+
+            var logLevelMessage = new LogLevelMessage { logLevel = LogLevelMessage.LogLevel.Warning, code = "04", message = "RECONNECTED" };
+
+            SendLogLevelMessage(logLevelMessage).Wait();
         }
 
         private static void OpcClient_Disconnecting(object sender, EventArgs e)
         {
             Console.WriteLine("DISCONNECTING");
+
+            var logLevelMessage = new LogLevelMessage { logLevel = LogLevelMessage.LogLevel.Warning, code = "03", message = "DISCONNECTING" };
+
+            SendLogLevelMessage(logLevelMessage).Wait();
         }
 
         private static void OpcClient_Disconnected(object sender, EventArgs e)
         {
             Console.WriteLine("DISCONNECTED");
+
+            var logLevelMessage = new LogLevelMessage { logLevel = LogLevelMessage.LogLevel.Error, code = "02", message = "DISCONNECTED" };
+
+            SendLogLevelMessage(logLevelMessage).Wait();
         }
 
         private static void OpcClient_BreakDetected(object sender, EventArgs e)
         {
 
             Console.WriteLine("BREAK DETECTED");
+
+            var logLevelMessage = new LogLevelMessage { logLevel = LogLevelMessage.LogLevel.Warning, code = "01", message = "BREAK DETECTED" };
+
+            SendLogLevelMessage(logLevelMessage).Wait();
         }
 
         private static void HandleDataChangedMachineLineNode(object sender, OpcDataChangeReceivedEventArgs e)
@@ -247,7 +284,9 @@ namespace WiseOpcUaClientModule
 
             var jsonMessage = JsonConvert.SerializeObject(wiseMessage);
 
-            using (var message = new Message(Encoding.UTF8.GetBytes(jsonMessage)))
+            var messageBytes = Encoding.UTF8.GetBytes(jsonMessage);
+
+            using (var message = new Message(messageBytes))
             {
                 message.ContentEncoding = "utf-8";
                 message.ContentType = "application/json";
@@ -256,7 +295,9 @@ namespace WiseOpcUaClientModule
 
                 ioTHubModuleClient.SendEventAsync("output1", message).Wait();
 
-                Console.WriteLine("Json message sent");
+                var size = CalculateSize(messageBytes);
+
+                Console.WriteLine($"Message with size {size} bytes sent.");
             }
         }
 
@@ -268,12 +309,15 @@ namespace WiseOpcUaClientModule
         private static string NodeRelay1 { get; set; } = DefaultNodeRelay1;
         private static string NodeRelay2 { get; set; } = DefaultNodeRelay2;
         private static string LicenseKey { get; set; } = DefaultLicenseKey;
+        private static LogLevelMessage.LogLevel MinimalLogLevel { get; set; } = DefaultMinimalLogLevel;
 
-        private static Task onDesiredPropertiesUpdate(TwinCollection desiredProperties, object userContext)
+        private static async Task onDesiredPropertiesUpdate(TwinCollection desiredProperties, object userContext)
         {
             if (desiredProperties.Count == 0)
             {
-                return Task.CompletedTask;
+                Console.WriteLine("Empty desired properties ignored.");
+
+                return;
             }
 
             try
@@ -417,29 +461,104 @@ namespace WiseOpcUaClientModule
 
                     reportedProperties["licenseKey"] = LicenseKey;
                 }
+                
+                if (desiredProperties.Contains("minimalLogLevel"))
+                {
+                    if (desiredProperties["minimalLogLevel"] != null)
+                    {
+                        var minimalLogLevel = desiredProperties["minimalLogLevel"];
+
+                        // casting from int to enum needed
+                        var minimalLogLevelInteger = Convert.ToInt32(minimalLogLevel);
+
+                        MinimalLogLevel = (LogLevelMessage.LogLevel)minimalLogLevelInteger;
+                    }
+                    else
+                    {
+                        MinimalLogLevel = DefaultMinimalLogLevel;
+                    }
+
+                    Console.WriteLine($"MinimalLogLevel changed to '{MinimalLogLevel}'");
+
+                    reportedProperties["minimalLogLevel"] = MinimalLogLevel;
+                }
+                else
+                {
+                    Console.WriteLine($"MinimalLogLevel ignored");
+                }
 
                 if (reportedProperties.Count > 0)
                 {
-                    client.UpdateReportedPropertiesAsync(reportedProperties).ConfigureAwait(false);
+                    await client.UpdateReportedPropertiesAsync(reportedProperties).ConfigureAwait(false);
 
-                    Console.WriteLine("Please restart module to activate changes.");
+                    Console.WriteLine("Changes to desired properties will be efficive on restarting the module.");
                 }
             }
             catch (AggregateException ex)
             {
+                Console.WriteLine($"Desired properties change error: {ex.Message}");
+
+                var logLevelMessage = new LogLevelMessage { logLevel = LogLevelMessage.LogLevel.Error, code = "98", message = $"Desired properties change error: {ex.Message}" };
+
+                await SendLogLevelMessage(logLevelMessage);
+
                 foreach (Exception exception in ex.InnerExceptions)
                 {
-                    Console.WriteLine();
-                    Console.WriteLine("Error when receiving desired property: {0}", exception);
+                    Console.WriteLine($"Error when receiving desired properties: {exception}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine();
-                Console.WriteLine("Error when receiving desired property: {0}", ex.Message);
+                Console.WriteLine($"Error when receiving desired properties: {ex.Message}");
+
+                var logLevelMessage = new LogLevelMessage { logLevel = LogLevelMessage.LogLevel.Error, code = "99", message = $"Error when receiving desired properties: {ex.Message}" };
+
+                await SendLogLevelMessage(logLevelMessage);
+            }
+        }
+
+        private static async Task SendLogLevelMessage(LogLevelMessage moduleStateMessage)
+        {
+            if (moduleStateMessage.logLevel < MinimalLogLevel)
+            {
+                return;
             }
 
-            return Task.CompletedTask;
+            var jsonMessage = JsonConvert.SerializeObject(moduleStateMessage);
+
+            var messageBytes = Encoding.UTF8.GetBytes(jsonMessage);
+
+            using (var message = new Message(messageBytes))
+            {
+                message.ContentEncoding = "utf-8";
+                message.ContentType = "application/json";
+                message.Properties.Add("content-type", "application/opcua-error-json");
+
+                await ioTHubModuleClient.SendEventAsync("outputError", message);
+
+                var size = CalculateSize(messageBytes);
+
+                Console.WriteLine($"Error message {moduleStateMessage.code} with size {size} bytes sent.");
+            }
+        }
+
+        private static int CalculateSize(byte[] messageBytes)
+        {
+            using (var message = new Message(messageBytes))
+            {
+                message.ContentEncoding = "utf-8";
+                message.ContentType = "application/json";
+                message.Properties.Add("content-type", "application/opcua-error-json"); // not flexible
+
+                var result = message.GetBytes().Length;
+
+                foreach (var p in message.Properties)
+                {
+                    result = result + p.Key.Length + p.Value.Length;
+                }
+
+                return result;
+            }
         }
     }
 }
