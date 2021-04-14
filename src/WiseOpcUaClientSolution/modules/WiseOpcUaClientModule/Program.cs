@@ -177,26 +177,57 @@ namespace WiseOpcUaClientModule
                 {
                     commands.Add(new OpcSubscribeDataChange(NodePotentio1, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
                 }
+                else
+                {
+                    System.Console.WriteLine("Ignored empty NodePotentio1");
+                }
+
                 if (!string.IsNullOrEmpty(NodePotentio2))
                 {
                     commands.Add(new OpcSubscribeDataChange(NodePotentio2, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
                 }
+                else
+                {
+                    System.Console.WriteLine("Ignored empty NodePotentio2");
+                }
+
                 if (!string.IsNullOrEmpty(NodeSwitch1))
                 {
                     commands.Add(new OpcSubscribeDataChange(NodeSwitch1, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
                 }
+                else
+                {
+                    System.Console.WriteLine("Ignored empty NodeSwitch1");
+                }
+
                 if (!string.IsNullOrEmpty(NodeSwitch2))
                 {
                     commands.Add(new OpcSubscribeDataChange(NodeSwitch2, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
                 }
+                else
+                {
+                    System.Console.WriteLine("Ignored empty NodeSwitch2");
+                }
+
                 if (!string.IsNullOrEmpty(NodeRelay1))
                 {
                     commands.Add(new OpcSubscribeDataChange(NodeRelay1, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
                 }
+                else
+                {
+                    System.Console.WriteLine("Ignored empty NodeRelay1");
+                }
+
                 if (!string.IsNullOrEmpty(NodeRelay2))
                 {
                     commands.Add(new OpcSubscribeDataChange(NodeRelay2, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
                 }
+                else
+                {
+                    System.Console.WriteLine("Ignored empty NodeRelay2");
+                }
+
+                OpcSubscription subscription = opcClient.SubscribeNodes(commands);
 
                 Console.WriteLine($"Client started... (listening to '{NodePotentio1},{NodePotentio2},{NodeSwitch1},{NodeSwitch2},{NodeRelay1},{NodeRelay2}' at '{Address}')");
 
@@ -533,25 +564,54 @@ namespace WiseOpcUaClientModule
                         {
                             commands.Add(new OpcSubscribeDataChange(NodePotentio1, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
                         }
+                        else
+                        {
+                            System.Console.WriteLine("Ignored empty NodePotentio1");
+                        }
+
                         if (!string.IsNullOrEmpty(NodePotentio2))
                         {
                             commands.Add(new OpcSubscribeDataChange(NodePotentio2, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
                         }
+                        else
+                        {
+                            System.Console.WriteLine("Ignored empty NodePotentio2");
+                        }
+
                         if (!string.IsNullOrEmpty(NodeSwitch1))
                         {
                             commands.Add(new OpcSubscribeDataChange(NodeSwitch1, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
                         }
+                        else
+                        {
+                            System.Console.WriteLine("Ignored empty NodeSwitch1");
+                        }
+
                         if (!string.IsNullOrEmpty(NodeSwitch2))
                         {
                             commands.Add(new OpcSubscribeDataChange(NodeSwitch2, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
                         }
+                        else
+                        {
+                            System.Console.WriteLine("Ignored empty NodeSwitch2");
+                        }
+
                         if (!string.IsNullOrEmpty(NodeRelay1))
                         {
                             commands.Add(new OpcSubscribeDataChange(NodeRelay1, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
                         }
+                        else
+                        {
+                            System.Console.WriteLine("Ignored empty NodeRelay1");
+                        }
+
                         if (!string.IsNullOrEmpty(NodeRelay2))
                         {
                             commands.Add(new OpcSubscribeDataChange(NodeRelay2, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
+                        }
+                        else
+                        {
+                            System.Console.WriteLine("Ignored empty NodeRelay2");
                         }
 
                         OpcSubscription subscription = opcClient.SubscribeNodes(commands);
