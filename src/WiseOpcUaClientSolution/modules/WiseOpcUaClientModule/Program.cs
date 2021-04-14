@@ -509,54 +509,59 @@ namespace WiseOpcUaClientModule
                 {
                     await client.UpdateReportedPropertiesAsync(reportedProperties).ConfigureAwait(false);
 
-                    opcClient.Disconnect();
-
-                    if (LicenseKey != string.Empty)
+                    if (opcClient != null)
                     {
-                        Opc.UaFx.Licenser.LicenseKey = LicenseKey;
+                        opcClient.Disconnect();
+
+                        if (LicenseKey != string.Empty)
+                        {
+                            Opc.UaFx.Licenser.LicenseKey = LicenseKey;
+                        }
+                        else
+                        {
+                            Console.WriteLine("No license key available.");
+
+                            Opc.UaFx.Licenser.LicenseKey = string.Empty;
+                        }       
+                                    
+                        opcClient.ServerAddress = new Uri(Address);
+                        opcClient.Connect();
+
+                        var commands = new List<OpcSubscribeDataChange>();
+
+                        if (!string.IsNullOrEmpty(NodePotentio1))
+                        {
+                            commands.Add(new OpcSubscribeDataChange(NodePotentio1, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
+                        }
+                        if (!string.IsNullOrEmpty(NodePotentio2))
+                        {
+                            commands.Add(new OpcSubscribeDataChange(NodePotentio2, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
+                        }
+                        if (!string.IsNullOrEmpty(NodeSwitch1))
+                        {
+                            commands.Add(new OpcSubscribeDataChange(NodeSwitch1, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
+                        }
+                        if (!string.IsNullOrEmpty(NodeSwitch2))
+                        {
+                            commands.Add(new OpcSubscribeDataChange(NodeSwitch2, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
+                        }
+                        if (!string.IsNullOrEmpty(NodeRelay1))
+                        {
+                            commands.Add(new OpcSubscribeDataChange(NodeRelay1, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
+                        }
+                        if (!string.IsNullOrEmpty(NodeRelay2))
+                        {
+                            commands.Add(new OpcSubscribeDataChange(NodeRelay2, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
+                        }
+
+                        OpcSubscription subscription = opcClient.SubscribeNodes(commands);
+
+                        Console.WriteLine($"Client started... (listening to '{NodePotentio1},{NodePotentio2},{NodeSwitch1},{NodeSwitch2},{NodeRelay1},{NodeRelay2}' at '{Address}')");
                     }
                     else
                     {
-                        // TODO: What is the correct Traeger OPC-UA Server key?
-
-                        Console.WriteLine("No license key available.");
-
-                        Opc.UaFx.Licenser.LicenseKey = string.Empty;
-                    }       
-                                 
-                    opcClient.ServerAddress = new Uri(Address);
-                    opcClient.Connect();
-
-                    var commands = new List<OpcSubscribeDataChange>();
-
-                    if (!string.IsNullOrEmpty(NodePotentio1))
-                    {
-                        commands.Add(new OpcSubscribeDataChange(NodePotentio1, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
+                        Console.WriteLine("Client construction postponed.");
                     }
-                    if (!string.IsNullOrEmpty(NodePotentio2))
-                    {
-                        commands.Add(new OpcSubscribeDataChange(NodePotentio2, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
-                    }
-                    if (!string.IsNullOrEmpty(NodeSwitch1))
-                    {
-                        commands.Add(new OpcSubscribeDataChange(NodeSwitch1, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
-                    }
-                    if (!string.IsNullOrEmpty(NodeSwitch2))
-                    {
-                        commands.Add(new OpcSubscribeDataChange(NodeSwitch2, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
-                    }
-                    if (!string.IsNullOrEmpty(NodeRelay1))
-                    {
-                        commands.Add(new OpcSubscribeDataChange(NodeRelay1, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
-                    }
-                    if (!string.IsNullOrEmpty(NodeRelay2))
-                    {
-                        commands.Add(new OpcSubscribeDataChange(NodeRelay2, OpcDataChangeTrigger.StatusValue, HandleDataChangedMachineLineNode));
-                    }
-
-                    OpcSubscription subscription = opcClient.SubscribeNodes(commands);
-
-                    Console.WriteLine($"Client started... (listening to '{NodePotentio1},{NodePotentio2},{NodeSwitch1},{NodeSwitch2},{NodeRelay1},{NodeRelay2}' at '{Address}')");
 
                     Console.WriteLine("Changes to desired properties can be enforced by restarting the module.");
                 }
