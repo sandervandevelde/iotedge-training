@@ -286,3 +286,405 @@ You have now an edge Device
 
 # Deploy a module from the portal
 
+Go to the Azure portal
+
+    portal.azure.com
+
+Go to your device registration in the IoT Hub
+
+Select ‘Set modules’ (This will start a full deployment)
+
+We are going to add a module from the Azure IoT Edge Module marketplace
+
+Click *+Add* in the IoT Edge Modules section
+
+Click *+Marketplace module*
+
+A dialog opens (More than 50 modules are selectable)
+
+Fill into the query: 
+
+    temperature
+
+hit enter
+
+The ‘Simulated Temperature Sensor’ module is shown
+
+Select it
+
+See the module is added to the deployment
+
+Click on the name to open the details
+
+See the name and image URI
+
+    **Remember the name**
+
+Gave the module this environment variable so it keeps sensing messages (normally it stops after 500 messages)
+
+MessageCount = -1
+
+Click *add (or Update)*
+
+We now add another module, a public module
+
+Click *+Add* in the IoT Edge Modules section
+
+Click *+IoT Edge module*
+
+A dialog opens
+
+Fill in
+
+    Name: hb
+    Image Uri: iotedgefoundation/iot-edge-heartbeat:3.0.2-amd64
+
+This is a [heartbeat module](https://hub.docker.com/r/iotedgefoundation/iot-edge-heartbeat/tags?page=1&ordering=last_updated)
+
+Give it a desired property to slow down the generation of heartbeats
+
+Change the module twin settings
+
+    {
+        "interval": 60000
+    }
+
+Click *Add (or update)*
+
+Click *Next : Routes*
+
+Remove the route named (This is added by the wizard. It overlaps with the original route)
+
+    SimulatedTemperatureSensorToIoTHub
+
+Click *Review & Create*
+
+We now see the complete Deployment Manifest!
+
+Click *Create*
+
+The deployment manifest is set ready and is now picked up by the device
+
+# See the arrival of the module
+
+Go to the device SSH 
+
+See the logging of the edgeAgent
+
+    sudo iotedge logs -f edgeAgent
+
+You will se the download of the two modules at the end followed by the update of the module twin reported properties
+
+*Note*: If you see errors occurs, stop the log generation and try to figure out what happens
+
+See if the modules are started and running:
+
+    sudo iotedge list
+
+Check the log of each module
+
+    sudo iotedge logs -f hb
+
+    sudo iotedge logs -f SimulatedTemperatureSensor
+
+See that each module generated it’s own messages
+
+Install the IoT Explorer
+
+    Download and install the [MSI] (https://github.com/Azure/azure-iot-explorer/releases)
+
+Before we can see cloud ingested data, we need the connection string from the iot hub
+
+Go to the portal
+
+    portal.azure.com
+
+Go to the IoT Hub
+
+    ih-weu-fieldlab-iotedge-training
+
+Go to “Built-in endpoints” dialog
+
+See there is a consumer group just for you
+
+    explorerX (replace with your number)
+
+This way, nobody is ‘stealing’ the messages from another developer
+
+    **Remember the your consumer group name**
+
+Go to the “share access policies” dialog
+
+Select the ‘iothubowner’
+
+*Warning*: You are about to copy the most important key of the iothub. Do not lose it!!!
+
+In the dialog copy the 
+    
+    “Connection string—primary key”
+
+    **Remember it**
+
+Now we have the IoT Hub connection string!
+
+Start the IoT Explorer tool which shows IoT Hub device information
+
+Select *Add Connection* 
+
+Take the connection string from the iot hub
+
+    Fill in the connection string 
+
+Hit Save
+
+Your Iot Hub is now queriable
+
+See your device is shown in the device list
+
+Select your device
+
+Select Telemetry
+
+Fill in your consumer group in the field Consumer Group
+
+Hit Start
+
+See the messages arriving in the iot explorer and therefore these messages are actually arriving in the IoT Hub
+
+You are now able to add preconfigured modules to an IoT Edge device and consume the messages
+
+# Create your own module
+
+Open VS Code
+
+*Note*: Is Your docker already running?
+
+Press F1
+
+    A list of wizards is shown
+
+Check out the Azure IoT Edge wizards like
+
+    Azure IoT Edge: New IoT Edge Solution
+
+Click on it. This starts the wizard
+
+Select a folder on your disk
+
+    I recommend “c:\git”
+
+Accept that folder
+
+A name for the solution is suggested
+
+Keep the name 
+
+    ‘EdgeSolution’
+
+A list of possible modules is suggested
+
+Select the C# module
+
+A name for the module is suggested
+
+Extend the name with your personal VM number! 
+
+    ‘SampleModuleX’
+
+A URI for the module image is suggested
+
+Keep the current uri 
+
+    “localhost:5000/samplemoduleX”
+
+*Note*: This is the local container repo on your machine
+
+The code is now generated for your module
+
+See that a folder with an application program.cs is created 
+
+*Important* A suggestion is made by VS Code:
+
+    “Required assets to build and debug are missing”
+
+    Accept with YES
+
+    Rebuild the code code with “CTRL-SHFT-B”
+
+    Select “Build”
+
+Your code should recompile successfully
+
+See In program.cs 
+
+    it ingest routed messages using input ‘input1’
+    it outputs routed messages into poutput ‘output1’
+
+You now have 'programmed' a module capable of ingesting messages coming form another module and putting it back on the route!
+
+In module.json, we see the uri name and image version. 
+
+    Ignore the first version which describes the version of this document layout
+
+We see also the possible platforms (Linux,Windows / Arm,Intel) supported. If needed you build build and push one container for each platform.
+
+*Note*: We stick to ./Dockerfile.amd64 for default Linux support as seen in the VM
+
+Before we can build and push this module, we need to have access to our own container registry, available in the Azure portal
+
+# Container registry administration
+
+Go to the Azure Portal
+
+    Portal.azure.com
+
+In the core resourcegroup, we see the container registry
+
+    Crweufieldlabiotedgetraining
+
+In the “Access keys” menu remember the values
+
+    **REMEMBER Login server, Username and password**
+
+Go to VS Code
+
+Open the Terminal (Via Menu | View | Terminal)
+
+Type in and run
+
+    Docker login crweufieldlabiotedgetraining.azurecr.io 
+
+You are asked for the name and password
+
+    type or paste it
+
+You will get a message *the Login succeeded* 
+
+We have to add this so VS Code can build and push to the container repository on your development device.
+
+*Note*: you need the credentials later on again
+
+# Build and push
+
+You are now ready to start building the module and pushing it
+
+Go to the module.json file
+
+Change the container URI. Replace localhost:5000 By the “Login server” name of our container registry
+
+    crweufieldlabiotedgetraining.azurecr.io/samplemoduleX
+
+Save the module.json file
+
+Right click module.json , select the last menulist item popping up
+
+    Build and Push IoT Edge module Image
+
+A list of possible Operating Systems and Hardware configurations is show (This is the same list as available in the module.json file)
+
+    Select AMD64
+
+In the Terminal, you see the progress of the build and push of your module
+
+*Note*: The first time this will take some time dus to the download of the master container or new module is based on
+
+See the module is pushed also to the container registry
+
+In the Azure portal, go to the container registry
+
+Select the “Repositories” menu
+
+See the appearance of the module
+
+Drill down into the module
+
+See the name
+
+    docker pull crweufieldlabiotedgetraining.azurecr.io/samplemoduleX:0.0.1-amd64
+
+strip this into
+
+    crweufieldlabiotedgetraining.azurecr.io/samplemoduleX:0.0.1-amd64
+
+    **REMEMBER your own image uri**
+
+You have created our own module.
+
+Let’s consume it!
+
+Go to the portal
+
+    portal.azure.com
+
+Go to the IoT Hub
+
+    ih-weu-fieldlab-iotedge-training
+
+Go to your iot edge device
+
+Start the deployment manifest update using
+
+    The ‘Set Modules’ menu 
+
+In “Container Registry Credentials”, Fill in the ACR credentials
+
+    Name: cr
+    Address: crweufieldlabiotedgetraining.azurecr.io
+    Username: crweufieldlabiotedgetraining
+    Password: the pwd
+
+Click *+Add* in the IoT Edge Modules section
+
+Click *+IoT Edge module*
+
+A dialog opens
+
+Fill in
+
+    Name: sample
+
+    Image Uri: crweufieldlabiotedgetraining.azurecr.io/samplemoduleX:0.0.1-amd64    (the image uri you copied earlier)
+
+Click *add (or Update)*
+
+Select *Next: routes*
+
+Replace all routes by these three new routes:
+
+    Sample2cloud:
+    FROM /messages/modules/sample/outputs/output1 INTO $upstream
+
+    Heartbeat2cloud:
+    FROM /messages/modules/hb/outputs/output1 INTO $upstream
+
+    Simulation2Sample: 
+    FROM /messages/modules/SimulatedTemperatureSensor/* INTO BrokeredEndpoint("/modules/sample/inputs/input1")
+
+Only the Sample and Heartbeat modules Are allowed to send message to the cloud. Simulated messages are sent to the Sample module 
+
+Select *Review + Create*
+
+Select *Create*
+
+See the arrival of the sample module in the edgeAgent logging
+
+    sudo iotedge logs -f edgeAgent
+
+See the sample module in iot edge list
+
+    sudo iotedge list
+
+Check the log of the sample module
+
+    sudo iotedge logs -f sample
+
+See how the messages from the simulation flow into the sample module and there are outputted to the cloud
+
+    See the IoT Explorer
+
+You have successfully created and deployed your first module.
+
+Inspired? check out https://github.com/iot-edge-foundation and http://blog.vandevelde-online.com/ for more module examples.
+
+
+
