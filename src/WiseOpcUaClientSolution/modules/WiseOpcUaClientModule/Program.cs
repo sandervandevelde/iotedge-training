@@ -648,6 +648,8 @@ namespace WiseOpcUaClientModule
         {
             if (moduleStateMessage.logLevel < MinimalLogLevel)
             {
+                Console.WriteLine($"Error message {moduleStateMessage.code}- Level {moduleStateMessage.logLevel} ignored.");
+
                 return;
             }
 
