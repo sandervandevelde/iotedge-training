@@ -1,4 +1,4 @@
-# Access the Edge Adevice
+# Access the Edge device
 
 *Note*: this is a VM in the Azure portal
 
