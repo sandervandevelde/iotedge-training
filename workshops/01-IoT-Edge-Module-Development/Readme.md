@@ -1,4 +1,4 @@
-# Access the Edge Adevice
+# Access the Edge device
 
 *Note*: this is a VM in the Azure portal
 
@@ -6,7 +6,7 @@ Login into the Azure Portal
 
     portal.azure.com
 
-Navigate to the Resourcegroup with the VMs
+Navigate to the Resource group with the VMs
 
     rg-weu-fieldlab-iotedge-training-edge
 
@@ -18,7 +18,7 @@ Navigate to your own IoT Edge Device VM. See presentation. (In this Example we u
 
 If the VM is not started, press the Start option (The status field will change)
 
-    The device is autmatically shut down at 19:00 to save costs.
+    The device is automatically shut down at 19:00 to save costs.
 
 See that the VM has a public IP address. (This address is normally dynamic. Here it is fixed for the demonstration)
 
@@ -36,7 +36,7 @@ Alter this line into:
 
     ssh edgeadmin0@X.Y.Z.A
 
-Run this command in a the Windows Powershell or a local dosbox on your machine 
+Run this command in at the Windows Powershell or a local DOSBox on your machine 
 
     Windows button + R
     CMD
@@ -52,7 +52,7 @@ See you are logged in.
 
 Get the latest updates
 
-    sudo apt udate
+    sudo apt update
     sudo apt upgrade
 
 *Note*: When asked for the Superuser password, fill in the password already provided
@@ -84,7 +84,7 @@ Accept the size of the update
 
     y
 
-This takes a litthe time...
+This takes a little time...
 
 Install IoT Edge 1.1.1
 
@@ -135,7 +135,7 @@ Go to the Device provisioning service
 
     dps-weu-fieldlab-iotedge-training
 
-See in the Linked IoT hubs, the iot hub is connected.
+See in the Linked IoT hubs, the IoT Hub is connected.
 
 Back in the Overview Menu, see the ScopeID
 
@@ -145,7 +145,7 @@ Go to Manage enrollments
 
 At the bottom half, check the Individual Enrollments
 
-    You device should not be there yet
+    Your device should not be there yet
 
 Add an individual enrollment
 
@@ -184,7 +184,7 @@ See there is no registration yet!
 
     Keep this page open
 
-We go back to the SSH connection with the edge Device
+We go back to the SSH connection with the Edge Device
 
     Check if the config.yaml file is still open
 
@@ -196,15 +196,15 @@ Fill in the three values for # DPS provisioning with symmetric key attestation
     provisioning:
     source: "dps"
     global_endpoint: "https://global.azure-devices-provisioning.net"
-    scope_id: "0ne0028B99A"
+    scope_id: "[scope id of your DPS]"
     attestation:
         method: "symmetric_key"
-        registration_id: "regDevice0"
-        symmetric_key: "VArsyS5l32M96EEGYR70awcslxHnhnuTMSed+NTZs8ThQQXgyopbiuW6Kk/03KlRHJ3yn2Um1j9FhalSujekHg=="
+        registration_id: "[device registration name]"
+        symmetric_key: "[primary key of your device]"
     always_reprovision_on_startup: true
     dynamic_reprovisioning: false
 
-*Note*: Remove a # and a space at the start of each line
+*Note*: Remove the # and the space at the start of each line
 
 Disable the original (still default) registration
 
@@ -221,7 +221,7 @@ Save and close the file
     CTRL-S
     CTRL-X
 
-Restart the iot edge daemon service so the changes are picked up
+Restart the IoT Edge daemon service so the changes are picked up
 
     sudo systemctl restart iotedge
 
@@ -247,7 +247,7 @@ Go to the portal in the browser
 
 Check in the portal the device is now having the status “assigned”. See also the IoT Hub is related to the device
 
-Go to the IoT Hub in the same resourcegroup
+Go to the IoT Hub in the same resource group
 
     ih-weu-fieldlab-iotedge-training
 
@@ -282,7 +282,7 @@ See the edgeAgent is started
 
 *Note*: this is a live capture of the logging. You can stop it with CTRL-C
 
-You have now an edge Device
+You have now an Edge Device
 
 # Deploy a module from the portal
 
@@ -351,7 +351,7 @@ Change the module twin settings
 
 Click *Add (or update)*
 
-Click *Next : Routes*
+Click *Next: Routes*
 
 Remove the route named (This is added by the wizard. It overlaps with the original route)
 
@@ -373,7 +373,7 @@ See the logging of the edgeAgent
 
     sudo iotedge logs -f edgeAgent
 
-You will se the download of the two modules at the end followed by the update of the module twin reported properties
+You will see the download of the two modules at the end followed by the update of the module twin reported properties
 
 *Note*: If you see errors occurs, stop the log generation and try to figure out what happens
 
@@ -387,13 +387,13 @@ Check the log of each module
 
     sudo iotedge logs -f SimulatedTemperatureSensor
 
-See that each module generated it’s own messages
+See that each module generated its own messages
 
 Install the IoT Explorer
 
     Download and install the [MSI] (https://github.com/Azure/azure-iot-explorer/releases)
 
-Before we can see cloud ingested data, we need the connection string from the iot hub
+Before we can see cloud ingested data, we need the connection string from the IoT Hub
 
 Go to the portal
 
@@ -403,7 +403,7 @@ Go to the IoT Hub
 
     ih-weu-fieldlab-iotedge-training
 
-Go to “Built-in endpoints” dialog
+Go to the “Built-in endpoints” dialog
 
 See there is a consumer group just for you
 
@@ -411,13 +411,13 @@ See there is a consumer group just for you
 
 This way, nobody is ‘stealing’ the messages from another developer
 
-    **Remember the your consumer group name**
+    **Remember your consumer group name**
 
-Go to the “share access policies” dialog
+Go to the “shared access policies” dialog
 
 Select the ‘iothubowner’
 
-*Warning*: You are about to copy the most important key of the iothub. Do not lose it!!!
+*Warning*: You are about to copy the most important key of the IoT Hub. Do not lose it!!!
 
 In the dialog copy the 
     
@@ -431,13 +431,13 @@ Start the IoT Explorer tool which shows IoT Hub device information
 
 Select *Add Connection* 
 
-Take the connection string from the iot hub
+Take the connection string from the IoT Hub
 
     Fill in the connection string 
 
 Hit Save
 
-Your Iot Hub is now queriable
+Your IoT Hub is now queriable
 
 See your device is shown in the device list
 
@@ -449,9 +449,9 @@ Fill in your consumer group in the field Consumer Group
 
 Hit Start
 
-See the messages arriving in the iot explorer and therefore these messages are actually arriving in the IoT Hub
+See the messages arriving in the IoT Explorer and therefore these messages are actually arriving in the IoT Hub
 
-You are now able to add preconfigured modules to an IoT Edge device and consume the messages
+You are now able to add pre-configured modules to an IoT Edge device and consume the messages
 
 # Create your own module
 
@@ -493,7 +493,7 @@ Extend the name with your personal VM number!
 
 A URI for the module image is suggested
 
-Keep the current uri 
+Keep the current URI 
 
     “localhost:5000/samplemoduleX”
 
@@ -509,7 +509,7 @@ See that a folder with an application program.cs is created
 
     Accept with YES
 
-    Rebuild the code code with “CTRL-SHFT-B”
+    Rebuild the code with “CTRL-SHFT-B”
 
     Select “Build”
 
@@ -517,16 +517,16 @@ Your code should recompile successfully
 
 See In program.cs 
 
-    it ingest routed messages using input ‘input1’
-    it outputs routed messages into poutput ‘output1’
+    it ingests routed messages using input ‘input1’
+    it outputs routed messages into output ‘output1’
 
-You now have 'programmed' a module capable of ingesting messages coming form another module and putting it back on the route!
+You now have 'programmed' a module capable of ingesting messages coming from another module and putting it back on the route!
 
-In module.json, we see the uri name and image version. 
+In module.json, we see the URI name and image version. 
 
     Ignore the first version which describes the version of this document layout
 
-We see also the possible platforms (Linux,Windows / Arm,Intel) supported. If needed you build build and push one container for each platform.
+We see also the possible platforms (Linux, Windows / Arm, Intel) supported. If needed you build and push one container for each platform.
 
 *Note*: We stick to ./Dockerfile.amd64 for default Linux support as seen in the VM
 
@@ -538,13 +538,13 @@ Go to the Azure Portal
 
     Portal.azure.com
 
-In the core resourcegroup, we see the container registry
+In the core resource group, we see the container registry
 
     Crweufieldlabiotedgetraining
 
 In the “Access keys” menu remember the values
 
-    **REMEMBER Login server, Username and password**
+    **REMEMBER Login server, Username, and password**
 
 Go to VS Code
 
@@ -552,7 +552,7 @@ Open the Terminal (Via Menu | View | Terminal)
 
 Type in and run
 
-    Docker login crweufieldlabiotedgetraining.azurecr.io 
+    docker login crweufieldlabiotedgetraining.azurecr.io 
 
 You are asked for the name and password
 
@@ -570,23 +570,23 @@ You are now ready to start building the module and pushing it
 
 Go to the module.json file
 
-Change the container URI. Replace localhost:5000 By the “Login server” name of our container registry
+Change the container URI. Replace localhost:5000 by the “Login server” name of our container registry
 
     crweufieldlabiotedgetraining.azurecr.io/samplemoduleX
 
 Save the module.json file
 
-Right click module.json , select the last menulist item popping up
+Right-click module.json, select the last menu list item popping up
 
     Build and Push IoT Edge module Image
 
-A list of possible Operating Systems and Hardware configurations is show (This is the same list as available in the module.json file)
+A list of possible Operating Systems and Hardware configurations is shown (This is the same list as available in the module.json file)
 
     Select AMD64
 
 In the Terminal, you see the progress of the build and push of your module
 
-*Note*: The first time this will take some time dus to the download of the master container or new module is based on
+*Note*: The first time this will take some time due to the download of the master container or new module is based on
 
 See the module is pushed also to the container registry
 
@@ -606,9 +606,9 @@ strip this into
 
     crweufieldlabiotedgetraining.azurecr.io/samplemoduleX:0.0.1-amd64
 
-    **REMEMBER your own image uri**
+    **REMEMBER your own image URI**
 
-You have created our own module.
+You have created your own module.
 
 Let’s consume it!
 
@@ -620,7 +620,7 @@ Go to the IoT Hub
 
     ih-weu-fieldlab-iotedge-training
 
-Go to your iot edge device
+Go to your IoT Edge device
 
 Start the deployment manifest update using
 
@@ -643,7 +643,7 @@ Fill in
 
     Name: sample
 
-    Image Uri: crweufieldlabiotedgetraining.azurecr.io/samplemoduleX:0.0.1-amd64    (the image uri you copied earlier)
+    Image Uri: crweufieldlabiotedgetraining.azurecr.io/samplemoduleX:0.0.1-amd64    (the image URI you copied earlier)
 
 Click *add (or Update)*
 
@@ -660,7 +660,7 @@ Replace all routes by these three new routes:
     Simulation2Sample: 
     FROM /messages/modules/SimulatedTemperatureSensor/* INTO BrokeredEndpoint("/modules/sample/inputs/input1")
 
-Only the Sample and Heartbeat modules Are allowed to send message to the cloud. Simulated messages are sent to the Sample module 
+Only the Sample and Heartbeat modules are allowed to send messages to the cloud. Simulated messages are sent to the Sample module 
 
 Select *Review + Create*
 
@@ -670,7 +670,7 @@ See the arrival of the sample module in the edgeAgent logging
 
     sudo iotedge logs -f edgeAgent
 
-See the sample module in iot edge list
+See the sample module appearing in the IoT Edge list
 
     sudo iotedge list
 
