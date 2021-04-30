@@ -196,11 +196,11 @@ Fill in the three values for # DPS provisioning with symmetric key attestation
     provisioning:
     source: "dps"
     global_endpoint: "https://global.azure-devices-provisioning.net"
-    scope_id: "0ne0028B99A"
+    scope_id: "[scope id of your DPS]"
     attestation:
         method: "symmetric_key"
-        registration_id: "regDevice0"
-        symmetric_key: "VArsyS5l32M96EEGYR70awcslxHnhnuTMSed+NTZs8ThQQXgyopbiuW6Kk/03KlRHJ3yn2Um1j9FhalSujekHg=="
+        registration_id: "[device registration name]"
+        symmetric_key: "[primary key of your device]"
     always_reprovision_on_startup: true
     dynamic_reprovisioning: false
 
