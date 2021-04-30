@@ -34,7 +34,7 @@ namespace WiseOpcUaClientModule
 
         private static OpcClient opcClient;
 
-        private static string _moduleId; 
+        private static string _moduleId;
 
         private static string _deviceId;
 
@@ -90,19 +90,19 @@ namespace WiseOpcUaClientModule
             var twin = await ioTHubModuleClient.GetTwinAsync();
             await onDesiredPropertiesUpdate(twin.Properties.Desired, ioTHubModuleClient);
 
-            Console.WriteLine("Supported desired properties: address, nodePotentio1, nodePotentio2, nodeSwitch1, nodeSwitch2, nodeRelay1, nodeRelay2, licenseKey, minimalLogLevel."); 
+            Console.WriteLine("Supported desired properties: address, nodePotentio1, nodePotentio2, nodeSwitch1, nodeSwitch2, nodeRelay1, nodeRelay2, licenseKey, minimalLogLevel.");
 
             // Attach callback for Twin desired properties updates
             await ioTHubModuleClient.SetDesiredPropertyUpdateCallbackAsync(onDesiredPropertiesUpdate, ioTHubModuleClient);
 
-            Console.WriteLine("Attached routing output: output1."); 
+            Console.WriteLine("Attached routing output: output1.");
 
             await ioTHubModuleClient.SetMethodHandlerAsync(
                 "lights",
                 lightsMethodCallBack,
                 ioTHubModuleClient);
 
-            Console.WriteLine("Attached method handler: lights");   
+            Console.WriteLine("Attached method handler: lights");
 
             await ioTHubModuleClient.OpenAsync();
 
@@ -112,30 +112,30 @@ namespace WiseOpcUaClientModule
             thread.Start();
         }
 
-        static async Task<MethodResponse> lightsMethodCallBack(MethodRequest methodRequest, object userContext)        
+        private static async Task<MethodResponse> lightsMethodCallBack(MethodRequest methodRequest, object userContext)
         {
-           var lightsResponse = new LightsResponse();
+            var lightsResponse = new LightsResponse();
 
             try
             {
                 System.Console.WriteLine($"Lights method: {methodRequest.DataAsJson}");
                 dynamic request = JsonConvert.DeserializeObject(methodRequest.DataAsJson);
 
-                uint relay1 = (uint) request.relay1;
-                uint relay2 = (uint) request.relay2;
+                uint relay1 = (uint)request.relay1;
+                uint relay2 = (uint)request.relay2;
 
                 OpcStatus result1 = opcClient.WriteNode("ns=2;s=Wise4012E:Relay01", relay1);  // typemismatch was a bitch
                 OpcStatus result2 = opcClient.WriteNode("ns=2;s=Wise4012E:Relay02", relay2);
 
-                lightsResponse.state1 = result1.Description;                   
-                lightsResponse.state2 = result2.Description;     
+                lightsResponse.state1 = result1.Description;
+                lightsResponse.state2 = result2.Description;
 
-                Console.WriteLine($"Response 1: '{result1.Description}'; Response 1: '{result2.Description}'");              
+                Console.WriteLine($"Response 1: '{result1.Description}'; Response 1: '{result2.Description}'");
             }
             catch (Exception ex)
             {
-               lightsResponse.errorMessage = ex.Message;   
-            }            
+                lightsResponse.errorMessage = ex.Message;
+            }
 
             var json = JsonConvert.SerializeObject(lightsResponse);
             var response = new MethodResponse(Encoding.UTF8.GetBytes(json), 200);
@@ -231,7 +231,7 @@ namespace WiseOpcUaClientModule
 
                 Console.WriteLine($"Client started... (listening to '{NodePotentio1},{NodePotentio2},{NodeSwitch1},{NodeSwitch2},{NodeRelay1},{NodeRelay2}' at '{Address}')");
 
-                while(true)
+                while (true)
                 {
                     // keep thread alive
                     Thread.Sleep(1000);
@@ -240,14 +240,14 @@ namespace WiseOpcUaClientModule
             catch (System.Exception ex)
             {
                 // TODO: Test for Timeout towards OPC-UA Server connection
- 
+
                 Console.WriteLine($"Fatal ThreadBody exception: {ex.Message}");
 
                 var logLevelMessage = new LogLevelMessage { logLevel = LogLevelMessage.LogLevel.Critical, code = "00", message = $"ThreadBody exception: {ex.Message}" };
 
                 SendLogLevelMessage(logLevelMessage).Wait();
 
-                Console.WriteLine("Halted...");    
+                Console.WriteLine("Halted...");
             }
         }
 
@@ -307,7 +307,6 @@ namespace WiseOpcUaClientModule
 
         private static void OpcClient_BreakDetected(object sender, EventArgs e)
         {
-
             Console.WriteLine("BREAK DETECTED");
 
             var logLevelMessage = new LogLevelMessage { logLevel = LogLevelMessage.LogLevel.Warning, code = "01", message = "BREAK DETECTED" };
@@ -323,7 +322,7 @@ namespace WiseOpcUaClientModule
 
             // SEND MESSAGE to CLOUD
 
-            var wiseMessage =  new WiseMessage
+            var wiseMessage = new WiseMessage
             {
                 deviceId = Address,
                 timeStamp = DateTime.Now,
@@ -343,10 +342,6 @@ namespace WiseOpcUaClientModule
                 message.Properties.Add("ContentEncodingX", "OpcUa+utf-8+application/json");
 
                 ioTHubModuleClient.SendEventAsync("output1", message).Wait();
-
-                var size = CalculateSize(messageBytes);
-
-                Console.WriteLine($"Message with size {size} bytes sent.");
             }
         }
 
@@ -510,7 +505,7 @@ namespace WiseOpcUaClientModule
 
                     reportedProperties["licenseKey"] = LicenseKey;
                 }
-                
+
                 if (desiredProperties.Contains("minimalLogLevel"))
                 {
                     if (desiredProperties["minimalLogLevel"] != null)
@@ -538,7 +533,7 @@ namespace WiseOpcUaClientModule
 
                 if (reportedProperties.Count > 0)
                 {
-                    await client.UpdateReportedPropertiesAsync(reportedProperties).ConfigureAwait(false);
+                    await client.UpdateReportedPropertiesAsync(reportedProperties);
 
                     if (opcClient != null)
                     {
@@ -553,8 +548,8 @@ namespace WiseOpcUaClientModule
                             Console.WriteLine("No license key available.");
 
                             Opc.UaFx.Licenser.LicenseKey = string.Empty;
-                        }       
-                                    
+                        }
+
                         opcClient.ServerAddress = new Uri(Address);
                         opcClient.Connect();
 
@@ -667,29 +662,6 @@ namespace WiseOpcUaClientModule
                 message.Properties.Add("content-type", "application/opcua-error-json");
 
                 await ioTHubModuleClient.SendEventAsync("outputError", message);
-
-                var size = CalculateSize(messageBytes);
-
-                Console.WriteLine($"Error message {moduleStateMessage.code} with size {size} bytes sent.");
-            }
-        }
-
-        private static int CalculateSize(byte[] messageBytes)
-        {
-            using (var message = new Message(messageBytes))
-            {
-                message.ContentEncoding = "utf-8";
-                message.ContentType = "application/json";
-                message.Properties.Add("content-type", "application/opcua-error-json"); // not flexible
-
-                var result = message.GetBytes().Length;
-
-                foreach (var p in message.Properties)
-                {
-                    result = result + p.Key.Length + p.Value.Length;
-                }
-
-                return result;
             }
         }
     }
