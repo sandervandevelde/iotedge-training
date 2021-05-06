@@ -95,7 +95,7 @@ namespace WiseOpcUaClientModule
             // Attach callback for Twin desired properties updates
             await ioTHubModuleClient.SetDesiredPropertyUpdateCallbackAsync(onDesiredPropertiesUpdate, ioTHubModuleClient);
 
-            Console.WriteLine("Attached routing output: output1.");
+            Console.WriteLine("Attached routing outputs: output1, outputError.");
 
             await ioTHubModuleClient.SetMethodHandlerAsync(
                 "lights",
