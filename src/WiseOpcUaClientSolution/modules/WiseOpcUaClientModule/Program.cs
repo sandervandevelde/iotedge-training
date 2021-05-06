@@ -325,7 +325,7 @@ namespace WiseOpcUaClientModule
             var wiseMessage = new WiseMessage
             {
                 deviceId = Address,
-                timeStamp = DateTime.Now,
+                timeStamp = DateTime.UtcNow,
                 node = (sender as OpcMonitoredItem).NodeId.Value.ToString(),
                 value = value,
             };
