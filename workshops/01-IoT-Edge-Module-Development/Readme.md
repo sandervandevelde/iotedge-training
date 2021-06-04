@@ -513,7 +513,18 @@ See that a folder with an application program.cs is created
 
     Select “Build”
 
-Your code should recompile successfully
+Your code should recompile successfully.
+
+_Note_: in case you see an error related to to the fact the project can not be found, please alter the 'Dockerfile.amd64' docker file:
+
+Add the name of your project file to the Publish line:
+
+```
+COPY . ./
+RUN dotnet publish -c Release -o out [Add your project name here].csproj
+```
+
+Save this file and retry the previous steps. 
 
 See In program.cs 
 
