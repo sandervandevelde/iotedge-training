@@ -515,18 +515,9 @@ See that a folder with an application program.cs is created
 
 Your code should recompile successfully.
 
-_Note_: in case you see an error related to to the fact the project can not be found, please alter the 'Dockerfile.amd64' docker file:
+## Testing
 
-Add the name of your project file to the Publish line:
-
-```
-COPY . ./
-RUN dotnet publish -c Release -o out [Add your project name here].csproj
-```
-
-Save this file and retry the previous steps. 
-
-See In program.cs 
+See in program.cs the reference to inputs and outputs:
 
     it ingests routed messages using input ‘input1’
     it outputs routed messages into output ‘output1’
@@ -541,7 +532,7 @@ We see also the possible platforms (Linux, Windows / Arm, Intel) supported. If n
 
 *Note*: We stick to ./Dockerfile.amd64 for default Linux support as seen in the VM
 
-Before we can build and push this module, we need to have access to our own container registry, available in the Azure portal
+Before we can build and push this module, we need to have access to our own container registry, available in the Azure portal.
 
 # Container registry administration
 
@@ -598,6 +589,21 @@ A list of possible Operating Systems and Hardware configurations is shown (This 
 In the Terminal, you see the progress of the build and push of your module
 
 *Note*: The first time this will take some time due to the download of the master container or new module is based on
+
+## Optional, in case of build error
+
+In case you see an error related to to the fact the project can not be found, please alter the 'Dockerfile.amd64' docker file:
+
+Add the name of your project file to the Publish line:
+
+```
+COPY . ./
+RUN dotnet publish -c Release -o out [Add your project name here].csproj
+```
+
+Save this file and retry the previous steps. 
+
+## Checking the container registry
 
 See the module is pushed also to the container registry
 
